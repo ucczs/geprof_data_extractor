@@ -7,6 +7,7 @@ from pdfminer.pdfpage import PDFPage
 import re
 
 g_article_list = []
+g_output_string = ''
 
 data_types = [
     'Artikel-Nummer',
@@ -37,10 +38,10 @@ data_types = [
     'Meldebestand',
     'Höchstbestand',
     'GTIN Flasche',
-    'GTIN Kiste ss Faß',
+    'GTIN Kiste / Faß',
     'GTIN Palette',
     'Bemerkung',
-    'ListenpreisssGrundpreis',
+    'Listenpreis/Grundpreis',
     'Einkaufspreis 1',
     'Einkaufspreis 2',
     'Einkaufspreis 3',
@@ -90,7 +91,7 @@ class CArticle:
             'Meldebestand': '',
             'Höchstbestand': '',
             'GTIN Flasche': '',
-            'GTIN Kiste ss Faß': '',
+            'GTIN Kiste / Faß': '',
             'GTIN Palette': '',
             'Bemerkung': '',
             'ListenpreisssGrundpreis': '',
@@ -125,9 +126,10 @@ class CArticle:
             else:
                 extracted_data = self.first_page[start_idx:]
 
+            extracted_data = extracted_data.replace("  ", " ").replace(":", "")
             self.data_dict[data_type] = extracted_data
 
-        self.clear_artikel_nummer()
+        #self.clear_artikel_nummer()
 
 
 
@@ -155,8 +157,13 @@ def extract_text(pdf_path):
     first_page = ""
     second_page = ""
 
+    number_page = 0
+
     for page in extract_text_by_page(pdf_path):
-        print(page)
+        number_page += 1
+        if number_page % 10 == 0:
+            print(number_page)
+        # print(page)
 
         if not page.find('Lieferanten-Konditionen') >= 0:
 
@@ -164,6 +171,8 @@ def extract_text(pdf_path):
             if not article_created:
                 newArticle = CArticle(first_page, "")
                 newArticle.extract_data_from_pages()
+                newArticle.first_page = ""
+                newArticle.second_page = ""
                 g_article_list.append(newArticle)
                 article_created = True
 
@@ -174,14 +183,36 @@ def extract_text(pdf_path):
             second_page = page
             newArticle = CArticle(first_page, second_page)
             newArticle.extract_data_from_pages()
+            newArticle.first_page = ""
+            newArticle.second_page = ""
+
             g_article_list.append(newArticle)
             article_created = True
 
 def print_articles_list():
     for article in g_article_list:
         print(article.data_dict.get("Artikel-Nummer"))
+        print(article.data_dict.get("Artikel-Bezeichnung"))
+
+
+def generate_output_file():
+    global g_output_string
+
+    for data_type in data_types:
+        g_output_string += (data_type + ";")
+    g_output_string += "\n"
+
+    for article in g_article_list:
+        for data_type in data_types:
+            g_output_string = g_output_string + str(article.data_dict.get(data_type)) + ";"
+        g_output_string += "\n"
+
+    output_file = open("output.csv","w+")
+    output_file.write(g_output_string)
+    output_file.close()
 
 if __name__ == '__main__':
-    print(extract_text('D:\\Creativity\\Python\\geprof_data_extractor\\geprof_data.pdf'))
-    print_articles_list()
-
+    # print(extract_text('D:\\Creativity\\Python\\geprof_data_extractor\\geprof_data.pdf'))
+    print(extract_text('D:\\Creativity\\Python\\geprof_data_extractor\\all_articles.pdf'))
+    # print_articles_list()
+    generate_output_file()

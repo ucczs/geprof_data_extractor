@@ -6,9 +6,13 @@ from pdfminer.pdfpage import PDFPage
 
 import re
 
+# list of all articles (type CArticle)
 g_article_list = []
+
+# collect all infos in this global string
 g_output_string = ''
 
+# list of data types in the pdf
 data_types = [
     'Artikel-Nummer',
     'Artikel-Bezeichnung',
@@ -55,13 +59,20 @@ data_types = [
     'Preis 7',
     'Preis 8',
     'Preis 9',
-    'Abholvergütung'
+    'Abholvergütung:'
 ]
 
+
+# class for articles
 class CArticle:
     def __init__(self, first_page, second_page):
+        # raw extracted text info from pdf
         self.first_page = first_page
         self.second_page = second_page
+
+        # dictionary to file with data found in the pdf
+        self.lieferaten_konditionen = []
+
         self.data_dict = {
             'Artikel-Nummer': '',
             'Artikel-Bezeichnung': '',
@@ -108,32 +119,58 @@ class CArticle:
             'Preis 7': '',
             'Preis 8': '',
             'Preis 9': '',
-            'Abholvergütung': ''
+            'Abholvergütung:': ''
       }
+  
 
-    def clear_artikel_nummer(self):
-        artikel_nummer = self.data_dict.get("Artikel-Nummer")
-        listNummer = re.findall(r"\d\d\d\d\d\d\d",artikel_nummer)
-        self.data_dict['Artikel-Nummer'] = listNummer
-    
-
-    def extract_data_from_pages(self):
+    # extract data from first page
+    def extract_data_from_first_page(self):
         for idx, data_type in enumerate(data_types):
             start_idx = self.first_page.find(data_type) + len(data_type)
-            if data_type != 'Abholvergütung':
+            if data_type != 'Abholvergütung:':
                 end_idx = self.first_page.find(data_types[idx + 1])
-                extracted_data = self.first_page[start_idx:end_idx]
+                
+                # only extract article number, no date
+                if data_type == 'Artikel-Nummer':
+                    extracted_data = self.first_page[start_idx:end_idx].replace("    ", " ").replace("   ", " ").replace("  ", " ")[:9]
+                else:
+                    extracted_data = self.first_page[start_idx:end_idx]
             else:
-                extracted_data = self.first_page[start_idx:]
+                extracted_data = self.first_page[start_idx:].replace(":", "")
 
-            extracted_data = extracted_data.replace("  ", " ").replace(":", "")
+            extracted_data = extracted_data.replace("    ", " ").replace("   ", " ").replace("  ", " ").replace("  ", " ").replace(":", "")
             self.data_dict[data_type] = extracted_data
 
-        #self.clear_artikel_nummer()
+
+    # extract data from second page
+    # search for <number> ". Ja" or <number> ". Nein"
+    def extract_data_from_second_page(self):
+        list_of_lieferanten_konditionen_idx = []
+        if self.second_page != "":
+            idx = 0
+            for i in range(1,51):
+                number_template_1 = str(i) + ". Ja"
+                number_template_2 = str(i) + ". Nein"
+                idx_1 = self.second_page.find(number_template_1, idx + 1)
+                idx_2 = self.second_page.find(number_template_2, idx + 1)
+                if idx_1 < 0 and idx_2 >= 0:
+                    idx = idx_2
+                elif idx_2 < 0 and idx_1 >= 0:
+                    idx = idx_1
+                else:
+                    idx = min(idx_1, idx_2)
+
+                if idx >= 0:
+                    list_of_lieferanten_konditionen_idx.append(idx)
+
+            for cnt, begin_idx in enumerate(list_of_lieferanten_konditionen_idx):
+                if cnt < len(list_of_lieferanten_konditionen_idx) - 1:
+                    self.lieferaten_konditionen.append(self.second_page[begin_idx:list_of_lieferanten_konditionen_idx[cnt + 1]])
+                else:
+                    self.lieferaten_konditionen.append(self.second_page[begin_idx:])
 
 
-
-
+# function for reading in pdf as text
 def extract_text_by_page(pdf_path):
     with open(pdf_path, 'rb') as fh:
         for page in PDFPage.get_pages(fh, 
@@ -152,6 +189,8 @@ def extract_text_by_page(pdf_path):
             converter.close()
             fake_file_handle.close()
 
+
+# pdf to text and text processing function
 def extract_text(pdf_path):
     article_created = False
     first_page = ""
@@ -160,9 +199,11 @@ def extract_text(pdf_path):
     number_page = 0
 
     for page in extract_text_by_page(pdf_path):
+
+        # debug output to see some progress
         number_page += 1
-        if number_page % 10 == 0:
-            print(number_page)
+        if number_page % 50 == 0:
+            print("Article " + str(number_page) + " data extracted")
         # print(page)
 
         if not page.find('Lieferanten-Konditionen') >= 0:
@@ -170,7 +211,8 @@ def extract_text(pdf_path):
             # article without second page, create and add article
             if not article_created:
                 newArticle = CArticle(first_page, "")
-                newArticle.extract_data_from_pages()
+                newArticle.extract_data_from_first_page()
+                newArticle.extract_data_from_second_page()
                 newArticle.first_page = ""
                 newArticle.second_page = ""
                 g_article_list.append(newArticle)
@@ -182,17 +224,13 @@ def extract_text(pdf_path):
         else:
             second_page = page
             newArticle = CArticle(first_page, second_page)
-            newArticle.extract_data_from_pages()
+            newArticle.extract_data_from_first_page()
+            newArticle.extract_data_from_second_page()
             newArticle.first_page = ""
             newArticle.second_page = ""
 
             g_article_list.append(newArticle)
             article_created = True
-
-def print_articles_list():
-    for article in g_article_list:
-        print(article.data_dict.get("Artikel-Nummer"))
-        print(article.data_dict.get("Artikel-Bezeichnung"))
 
 
 def generate_output_file():
@@ -200,16 +238,33 @@ def generate_output_file():
 
     for data_type in data_types:
         g_output_string += (data_type + ";")
+
+    for i in range(1,51):
+        g_output_string += (str(i) + ". Lieferanten-Konditionen;")
+
     g_output_string += "\n"
+    output_file_cnt = 0
 
     for article in g_article_list:
+        
+        # debug output to see some progress
+        output_file_cnt += 1
+        if output_file_cnt % 50 == 0:
+            print("Article " + str(output_file_cnt) + " of " + str(len(g_article_list)) + " written to output string.")
+
         for data_type in data_types:
-            g_output_string = g_output_string + str(article.data_dict.get(data_type)) + ";"
+            g_output_string += str(article.data_dict.get(data_type)) + ";"
+        
+        for lieferaten_kondition in article.lieferaten_konditionen:
+            g_output_string += lieferaten_kondition + ";"
+
         g_output_string += "\n"
 
+    g_output_string = g_output_string.replace("; ", ";").replace("\n ", "\n")
     output_file = open("output.csv","w+")
     output_file.write(g_output_string)
     output_file.close()
+
 
 if __name__ == '__main__':
     # print(extract_text('D:\\Creativity\\Python\\geprof_data_extractor\\geprof_data.pdf'))

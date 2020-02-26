@@ -14,51 +14,51 @@ g_output_string = ''
 
 # list of data types in the pdf
 data_types = [
-    'Artikel-Nummer',
-    'Artikel-Bezeichnung',
-    'Zusatz-Bezeichnung 1',
-    'Kurzbezeichnung',
-    'Matchcode II',
-    'Warengruppe',
-    'Leitartikel',
-    'Größe',
-    'Inhalt',
-    'Gewicht',
-    'Mengeneinheit',
-    'Produzent',
+    'Artikel-Nummer:',
+    'Artikel-Bezeichnung:',
+    'Zusatz-Bezeichnung 1:',
+    'Kurzbezeichnung:',
+    'Matchcode II:',
+    'Warengruppe:',
+    'Leitartikel:',
+    'Größe:',
+    'Inhalt:',
+    'Gewicht:',
+    'Mengeneinheit:',
+    'Produzent:',
     'Artikel-Nr Produzent',
-    'Hauptlieferant',
-    'Artikel-Nr Hauptlieferant',
-    'Leergut-Nummer',
-    'Pfand',
+    'Hauptlieferant:',
+    'Artikel-Nr Hauptlieferant:',
+    'Leergut-Nummer:',
+    'Pfand:',
     'Artikelart',
-    'Rückvergütung',
-    'MwSt-Satz',
-    'Rabattartikel',
-    'Preisliste',
-    'Preislisten-Nummer',
-    'Aktiv',
-    'Lagerort',
-    'Meldebestand',
-    'Höchstbestand',
-    'GTIN Flasche',
-    'GTIN Kiste / Faß',
-    'GTIN Palette',
-    'Bemerkung',
-    'Listenpreis/Grundpreis',
-    'Einkaufspreis 1',
-    'Einkaufspreis 2',
-    'Einkaufspreis 3',
-    'Kalkulation',
-    'Preis 1',
-    'Preis 2',
-    'Preis 3',
-    'Preis 4',
-    'Preis 5',
-    'Preis 6',
-    'Preis 7',
-    'Preis 8',
-    'Preis 9',
+    'Rückvergütung:',
+    'MwSt-Satz:',
+    'Rabattartikel:',
+    'Preisliste:',
+    'Preislisten-Nummer:',
+    'Aktiv:',
+    'Lagerort:',
+    'Meldebestand:',
+    'Höchstbestand:',
+    'GTIN Flasche:',
+    'GTIN Kiste / Faß:',
+    'GTIN Palette:',
+    'Bemerkung:',
+    'Listenpreis/Grundpreis:',
+    'Einkaufspreis 1:',
+    'Einkaufspreis 2:',
+    'Einkaufspreis 3:',
+    'Kalkulation:',
+    'Preis 1:',
+    'Preis 2:',
+    'Preis 3:',
+    'Preis 4:',
+    'Preis 5:',
+    'Preis 6:',
+    'Preis 7:',
+    'Preis 8:',
+    'Preis 9:',
     'Abholvergütung:'
 ]
 
@@ -74,51 +74,51 @@ class CArticle:
         self.lieferaten_konditionen = []
 
         self.data_dict = {
-            'Artikel-Nummer': '',
-            'Artikel-Bezeichnung': '',
-            'Zusatz-Bezeichnung 1': '',
-            'Kurzbezeichnung': '',
-            'Matchcode II': '',
-            'Warengruppe': '',
-            'Leitartikel': '',
-            'Größe': '',
-            'Inhalt': '',
-            'Gewicht': '',
-            'Mengeneinheit': '',
-            'Produzent': '',
+            'Artikel-Nummer:': '',
+            'Artikel-Bezeichnung:': '',
+            'Zusatz-Bezeichnung 1:': '',
+            'Kurzbezeichnung:': '',
+            'Matchcode II:': '',
+            'Warengruppe:': '',
+            'Leitartikel:': '',
+            'Größe:': '',
+            'Inhalt:': '',
+            'Gewicht:': '',
+            'Mengeneinheit:': '',
+            'Produzent:': '',
             'Artikel-Nr Produzent': '',
-            'Hauptlieferant': '',
-            'Artikel-Nr Hauptlieferant': '',
-            'Leergut-Nummer': '',
-            'Pfand': '',
+            'Hauptlieferant:': '',
+            'Artikel-Nr Hauptlieferant:': '',
+            'Leergut-Nummer:': '',
+            'Pfand:': '',
             'Artikelart': '',
-            'Rückvergütung': '',
-            'MwSt-Satz': '',
-            'Rabattartikel': '',
-            'Preisliste': '',
-            'Preislisten-Nummer': '',
-            'Aktiv': '',
-            'Lagerort': '',
-            'Meldebestand': '',
-            'Höchstbestand': '',
-            'GTIN Flasche': '',
-            'GTIN Kiste / Faß': '',
-            'GTIN Palette': '',
-            'Bemerkung': '',
-            'ListenpreisssGrundpreis': '',
-            'Einkaufspreis 1': '',
-            'Einkaufspreis 2': '',
-            'Einkaufspreis 3': '',
-            'Kalkulation': '',
-            'Preis 1': '',
-            'Preis 2': '',
-            'Preis 3': '',
-            'Preis 4': '',
-            'Preis 5': '',
-            'Preis 6': '',
-            'Preis 7': '',
-            'Preis 8': '',
-            'Preis 9': '',
+            'Rückvergütung:': '',
+            'MwSt-Satz:': '',
+            'Rabattartikel:': '',
+            'Preisliste:': '',
+            'Preislisten-Nummer:': '',
+            'Aktiv:': '',
+            'Lagerort:': '',
+            'Meldebestand:': '',
+            'Höchstbestand:': '',
+            'GTIN Flasche:': '',
+            'GTIN Kiste / Faß:': '',
+            'GTIN Palette:': '',
+            'Bemerkung:': '',
+            'ListenpreisssGrundpreis:': '',
+            'Einkaufspreis 1:': '',
+            'Einkaufspreis 2:': '',
+            'Einkaufspreis 3:': '',
+            'Kalkulation:': '',
+            'Preis 1:': '',
+            'Preis 2:': '',
+            'Preis 3:': '',
+            'Preis 4:': '',
+            'Preis 5:': '',
+            'Preis 6:': '',
+            'Preis 7:': '',
+            'Preis 8:': '',
+            'Preis 9:': '',
             'Abholvergütung:': ''
       }
   
@@ -131,7 +131,7 @@ class CArticle:
                 end_idx = self.first_page.find(data_types[idx + 1])
                 
                 # only extract article number, no date
-                if data_type == 'Artikel-Nummer':
+                if data_type == 'Artikel-Nummer:':
                     extracted_data = self.first_page[start_idx:end_idx].replace("    ", " ").replace("   ", " ").replace("  ", " ")[:9]
                 else:
                     extracted_data = self.first_page[start_idx:end_idx]
@@ -203,7 +203,7 @@ def extract_text(pdf_path):
         # debug output to see some progress
         number_page += 1
         if number_page % 50 == 0:
-            print("Article " + str(number_page) + " data extracted")
+            print("Page " + str(number_page) + " extracted")
         # print(page)
 
         if not page.find('Lieferanten-Konditionen') >= 0:
@@ -212,9 +212,7 @@ def extract_text(pdf_path):
             if not article_created:
                 newArticle = CArticle(first_page, "")
                 newArticle.extract_data_from_first_page()
-                newArticle.extract_data_from_second_page()
                 newArticle.first_page = ""
-                newArticle.second_page = ""
                 g_article_list.append(newArticle)
                 article_created = True
 
@@ -260,14 +258,14 @@ def generate_output_file():
 
         g_output_string += "\n"
 
-    g_output_string = g_output_string.replace("; ", ";").replace("\n ", "\n")
+    g_output_string = g_output_string.replace("; ", ";").replace("\n ", "\n").replace("\"", "")
     output_file = open("output.csv","w+")
     output_file.write(g_output_string)
     output_file.close()
 
 
 if __name__ == '__main__':
-    # print(extract_text('D:\\Creativity\\Python\\geprof_data_extractor\\geprof_data.pdf'))
-    print(extract_text('D:\\Creativity\\Python\\geprof_data_extractor\\all_articles.pdf'))
+    # print(extract_text('.\\geprof_data.pdf'))
+    print(extract_text('.\\all_articles.pdf'))
     # print_articles_list()
     generate_output_file()

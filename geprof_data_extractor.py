@@ -250,11 +250,17 @@ def generate_output_file():
         if output_file_cnt % 50 == 0:
             print("Article " + str(output_file_cnt) + " of " + str(len(g_article_list)) + " written to output string.")
 
+        # list, append and join is used for speed up (concatenation is very slow)
+        data_types_list = []
         for data_type in data_types:
-            g_output_string += str(article.data_dict.get(data_type)) + ";"
+            data_types_list.append(article.data_dict.get(data_type))
+        g_output_string += (';'.join(data_types_list) + ";")
         
+        # list, append and join is used for speed up (concatenation is very slow)
+        lieferaten_kondition_list = []
         for lieferaten_kondition in article.lieferaten_konditionen:
-            g_output_string += lieferaten_kondition + ";"
+            lieferaten_kondition_list.append(lieferaten_kondition)
+        g_output_string += (';'.join(lieferaten_kondition_list) + ";")
 
         g_output_string += "\n"
 

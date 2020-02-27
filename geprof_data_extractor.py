@@ -149,8 +149,13 @@ class CArticle:
         if self.second_page != "":
             idx = 0
             for i in range(1,51):
-                number_template_1 = str(i) + ". Ja"
-                number_template_2 = str(i) + ". Nein"
+                if i < 10:
+                    number_template_1 = " " + str(i) + ". Ja"
+                    number_template_2 = " " + str(i) + ". Nein"
+                else:
+                    number_template_1 = str(i) + ". Ja"
+                    number_template_2 = str(i) + ". Nein"
+                  
                 idx_1 = self.second_page.find(number_template_1, idx + 1)
                 idx_2 = self.second_page.find(number_template_2, idx + 1)
                 if idx_1 < 0 and idx_2 >= 0:
@@ -164,6 +169,8 @@ class CArticle:
                     list_of_lieferanten_konditionen_idx.append(idx)
 
             for cnt, begin_idx in enumerate(list_of_lieferanten_konditionen_idx):
+                # print(self.data_dict["Artikel-Bezeichnung:"])
+                # print(begin_idx)
                 if cnt < len(list_of_lieferanten_konditionen_idx) - 1:
                     self.lieferaten_konditionen.append(self.second_page[begin_idx:list_of_lieferanten_konditionen_idx[cnt + 1]])
                 else:
@@ -264,7 +271,7 @@ def generate_output_file():
 
         g_output_string += "\n"
 
-    g_output_string = g_output_string.replace("; ", ";").replace("\n ", "\n").replace("\"", "")
+    g_output_string = g_output_string.replace("; ", ";").replace("\n ", "\n").replace("\"", "").replace(" ;", ";")
     output_file = open("output.csv","w+")
     output_file.write(g_output_string)
     output_file.close()

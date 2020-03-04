@@ -13,7 +13,7 @@ g_article_list = []
 g_output_string = ''
 
 # list of data types in the pdf
-data_types = [
+g_data_types = [
     'Artikel-Nummer:',
     'Artikel-Bezeichnung:',
     'Zusatz-Bezeichnung 1:',
@@ -25,9 +25,13 @@ data_types = [
     'Inhalt:',
     'Gewicht:',
     'Mengeneinheit:',
-    'Produzent:',
+    'input_only_Produzent:',            # input only, no output
+    'output_only_Produzent-Nr:',        # output only, no read in from pdf
+    'output_only_Produzent-Name:',      # output only, no read in from pdf
     'Artikel-Nr Produzent',
-    'Hauptlieferant:',
+    'input_only_Hauptlieferant:',       # input only, no output
+    'output_only_Hauptlieferant-Nr:',   # output only, no read in from pdf
+    'output_only_Hauptlieferant-Name:', # output only, no read in from pdf
     'Artikel-Nr Hauptlieferant:',
     'Leergut-Nummer:',
     'Pfand:',
@@ -62,6 +66,20 @@ data_types = [
     'Abholvergütung:'
 ]
 
+g_replace_data_type_in_output = {
+    'Produzent:': ['Produzent-Nr:', 'Produzent-Name:'],
+    'Hauptlieferant:': ['Hauptlieferant-Nr:', 'Hauptlieferant-Name:']
+}
+
+# define substrings which should be removed from a specific data type
+g_remove_dict = {
+    'Größe:': 'Stück',
+    'Inhalt:': 'Liter',
+    'Gewicht:': 'Kilogramm',
+    'Meldebestand:': 'Einheiten',
+    'Höchstbestand:': 'Einheiten',
+    'Pfand:': 'EUR'
+}
 
 # class for articles
 class CArticle:
@@ -86,8 +104,12 @@ class CArticle:
             'Gewicht:': '',
             'Mengeneinheit:': '',
             'Produzent:': '',
+            'Produzent-Nr:': '',            # data extracted from "Produzent"
+            'Produzent-Name:': '',          # data extracted from "Produzent"
             'Artikel-Nr Produzent': '',
             'Hauptlieferant:': '',
+            'Hauptlieferant-Nr:': '',       # data extracted from "Hauptlieferant"
+            'Hauptlieferant-Name:': '',     # data extracted from "Hauptlieferant"
             'Artikel-Nr Hauptlieferant:': '',
             'Leergut-Nummer:': '',
             'Pfand:': '',
@@ -125,10 +147,23 @@ class CArticle:
 
     # extract data from first page
     def extract_data_from_first_page(self):
-        for idx, data_type in enumerate(data_types):
+        for idx, data_type in enumerate(g_data_types):
+            
+            # skipp data types which are marked as output_only_
+            if data_type.find("output_only_") >= 0:
+                continue
+
+            # remove prefix for input_only flag
+            data_type = data_type.replace("input_only_", "")
+
             start_idx = self.first_page.find(data_type) + len(data_type)
             if data_type != 'Abholvergütung:':
-                end_idx = self.first_page.find(data_types[idx + 1])
+                next_valid_input_type = 1
+
+                while(g_data_types[idx + next_valid_input_type].find("output_only_") >= 0):
+                    next_valid_input_type += 1
+
+                end_idx = self.first_page.find(g_data_types[idx + next_valid_input_type].replace("input_only_", ""))
                 
                 # only extract article number, no date
                 if data_type == 'Artikel-Nummer:':
@@ -137,6 +172,20 @@ class CArticle:
                     extracted_data = self.first_page[start_idx:end_idx]
             else:
                 extracted_data = self.first_page[start_idx:].replace(":", "")
+
+            # remove substrings which are always present in the data_type (e.g. EUR, Liter...)
+            for remove_from_data_type in g_remove_dict.keys():
+                if data_type.find(remove_from_data_type) >= 0:
+                    extracted_data = extracted_data.replace(g_remove_dict[remove_from_data_type], "")
+
+            # clear MwSt-Satz data
+            if data_type.find("MwSt-Satz:") >= 0:
+                if extracted_data.find("19.00") >= 0:
+                    extracted_data = "19"
+                elif extracted_data.find("7.00") >= 0:
+                    extracted_data = "7"
+                elif extracted_data.find("0.00") >= 0:
+                    extracted_data = "0"
 
             extracted_data = extracted_data.replace("    ", " ").replace("   ", " ").replace("  ", " ").replace("  ", " ").replace(":", "")
             self.data_dict[data_type] = extracted_data
@@ -169,13 +218,33 @@ class CArticle:
                     list_of_lieferanten_konditionen_idx.append(idx)
 
             for cnt, begin_idx in enumerate(list_of_lieferanten_konditionen_idx):
-                # print(self.data_dict["Artikel-Bezeichnung:"])
-                # print(begin_idx)
                 if cnt < len(list_of_lieferanten_konditionen_idx) - 1:
                     self.lieferaten_konditionen.append(self.second_page[begin_idx:list_of_lieferanten_konditionen_idx[cnt + 1]])
                 else:
                     self.lieferaten_konditionen.append(self.second_page[begin_idx:])
 
+    # format of produzent and hauptlieferant:
+    # 01234 Name
+    # split up number and name
+    def split_up_produ_hauptl(self):
+        split_up_data_types = ['Produzent:', 'Hauptlieferant:']
+        for split_up_data_type in split_up_data_types:
+            original_data = self.data_dict[split_up_data_type].strip()
+            data_type_nr = original_data[:original_data.find(" ")]
+            data_type_name = original_data[original_data.find(" "):]
+
+            self.data_dict[split_up_data_type[:-1] + '-Nr:'] = data_type_nr
+            self.data_dict[split_up_data_type[:-1] + '-Name:'] = data_type_name
+
+    def split_up_combined_infos(self):
+        # split up Produzent and Hauptlieferant
+        self.split_up_produ_hauptl()
+
+        # split up Mengeneinheit
+        # split up Listenpreis/Grundpreis
+        # split up Einkaufspreis X
+        # split up Preis X
+        # split up Lieferanten-Konditionen
 
 # function for reading in pdf as text
 def extract_text_by_page(pdf_path):
@@ -219,6 +288,7 @@ def extract_text(pdf_path):
             if not article_created:
                 newArticle = CArticle(first_page, "")
                 newArticle.extract_data_from_first_page()
+                newArticle.split_up_combined_infos()
                 newArticle.first_page = ""
                 g_article_list.append(newArticle)
                 article_created = True
@@ -231,6 +301,7 @@ def extract_text(pdf_path):
             newArticle = CArticle(first_page, second_page)
             newArticle.extract_data_from_first_page()
             newArticle.extract_data_from_second_page()
+            newArticle.split_up_combined_infos()
             newArticle.first_page = ""
             newArticle.second_page = ""
 
@@ -241,7 +312,21 @@ def extract_text(pdf_path):
 def generate_output_file():
     global g_output_string
 
-    for data_type in data_types:
+    # Abholvergütung is not necessary
+    g_data_types.remove("Abholvergütung:")
+
+    # remove data_types for input_only
+    # and remove prefix "output_only_"
+    remove_list = []
+    for idx, data_type in enumerate(g_data_types):
+        g_data_types[idx] = data_type.replace("output_only_", "")
+        if data_type.find("input_only_") >= 0:
+            remove_list.append(data_type)
+    for remove_data in remove_list:
+        g_data_types.remove(remove_data)
+
+    # create headings for output csv
+    for data_type in g_data_types:
         g_output_string += (data_type + ";")
 
     for i in range(1,51):
@@ -259,7 +344,7 @@ def generate_output_file():
 
         # list, append and join is used for speed up (concatenation is very slow)
         data_types_list = []
-        for data_type in data_types:
+        for data_type in g_data_types:
             data_types_list.append(article.data_dict.get(data_type))
         g_output_string += (';'.join(data_types_list) + ";")
         
@@ -278,7 +363,7 @@ def generate_output_file():
 
 
 if __name__ == '__main__':
-    # print(extract_text('.\\geprof_data.pdf'))
-    print(extract_text('.\\all_articles.pdf'))
+    print(extract_text('.\\geprof_data.pdf'))
+    # print(extract_text('.\\all_articles.pdf'))
     # print_articles_list()
     generate_output_file()

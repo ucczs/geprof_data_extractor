@@ -24,14 +24,20 @@ g_data_types = [
     'Größe:',
     'Inhalt:',
     'Gewicht:',
-    'Mengeneinheit:',
-    'input_only_Produzent:',            # input only, no output
-    'output_only_Produzent-Nr:',        # output only, no read in from pdf
-    'output_only_Produzent-Name:',      # output only, no read in from pdf
+    'input_only_Mengeneinheit:',                # input only, no output
+    'output_only_Mengeneinheit Nr:',            # output only, no read in from pdf
+    'output_only_Mengeneinheit Ki:',            # output only, no read in from pdf
+    'output_only_Mengeneinheit Fl:',            # output only, no read in from pdf
+    'output_only_Mengeneinheit Pal:',           # output only, no read in from pdf
+    'output_only_Mengeneinheit Lage:',          # output only, no read in from pdf
+    'output_only_Mengeneinheit Bezeichnung:',   # output only, no read in from pdf
+    'input_only_Produzent:',                    # input only, no output
+    'output_only_Produzent-Nr:',                # output only, no read in from pdf
+    'output_only_Produzent-Name:',              # output only, no read in from pdf
     'Artikel-Nr Produzent',
-    'input_only_Hauptlieferant:',       # input only, no output
-    'output_only_Hauptlieferant-Nr:',   # output only, no read in from pdf
-    'output_only_Hauptlieferant-Name:', # output only, no read in from pdf
+    'input_only_Hauptlieferant:',               # input only, no output
+    'output_only_Hauptlieferant-Nr:',           # output only, no read in from pdf
+    'output_only_Hauptlieferant-Name:',         # output only, no read in from pdf
     'Artikel-Nr Hauptlieferant:',
     'Leergut-Nummer:',
     'Pfand:',
@@ -66,10 +72,6 @@ g_data_types = [
     'Abholvergütung:'
 ]
 
-g_replace_data_type_in_output = {
-    'Produzent:': ['Produzent-Nr:', 'Produzent-Name:'],
-    'Hauptlieferant:': ['Hauptlieferant-Nr:', 'Hauptlieferant-Name:']
-}
 
 # define substrings which should be removed from a specific data type
 g_remove_dict = {
@@ -103,13 +105,19 @@ class CArticle:
             'Inhalt:': '',
             'Gewicht:': '',
             'Mengeneinheit:': '',
+            'Mengeneinheit Nr:': '',            # data extracted from "Mengeneinheit"
+            'Mengeneinheit Ki:': '',            # data extracted from "Mengeneinheit"
+            'Mengeneinheit Fl:': '',            # data extracted from "Mengeneinheit"
+            'Mengeneinheit Pal:': '',           # data extracted from "Mengeneinheit"
+            'Mengeneinheit Lage:': '',          # data extracted from "Mengeneinheit"
+            'Mengeneinheit Bezeichnung:': '',   # data extracted from "Mengeneinheit"
             'Produzent:': '',
-            'Produzent-Nr:': '',            # data extracted from "Produzent"
-            'Produzent-Name:': '',          # data extracted from "Produzent"
+            'Produzent-Nr:': '',                # data extracted from "Produzent"
+            'Produzent-Name:': '',              # data extracted from "Produzent"
             'Artikel-Nr Produzent': '',
             'Hauptlieferant:': '',
-            'Hauptlieferant-Nr:': '',       # data extracted from "Hauptlieferant"
-            'Hauptlieferant-Name:': '',     # data extracted from "Hauptlieferant"
+            'Hauptlieferant-Nr:': '',           # data extracted from "Hauptlieferant"
+            'Hauptlieferant-Name:': '',         # data extracted from "Hauptlieferant"
             'Artikel-Nr Hauptlieferant:': '',
             'Leergut-Nummer:': '',
             'Pfand:': '',
@@ -149,7 +157,7 @@ class CArticle:
     def extract_data_from_first_page(self):
         for idx, data_type in enumerate(g_data_types):
             
-            # skipp data types which are marked as output_only_
+            # skip data types which are marked as output_only_
             if data_type.find("output_only_") >= 0:
                 continue
 
@@ -236,15 +244,38 @@ class CArticle:
             self.data_dict[split_up_data_type[:-1] + '-Nr:'] = data_type_nr
             self.data_dict[split_up_data_type[:-1] + '-Name:'] = data_type_name
 
+
+    def split_up_mengeneinheit(self):
+        original_data = self.data_dict['Mengeneinheit:'].strip()
+
+        self.data_dict['Mengeneinheit Nr:'] = original_data[:find_nth(original_data, " ", 1)]
+        self.data_dict['Mengeneinheit Ki:'] = original_data[find_nth(original_data, " ", 1)+1:find_nth(original_data, " ", 2)]
+        self.data_dict['Mengeneinheit Fl:'] = original_data[find_nth(original_data, " ", 2)+1:find_nth(original_data, " ", 3)]
+        self.data_dict['Mengeneinheit Pal:'] = original_data[find_nth(original_data, " ", 3)+1:find_nth(original_data, " ", 4)]
+        self.data_dict['Mengeneinheit Lage:'] = original_data[find_nth(original_data, " ", 4)+1:find_nth(original_data, " ", 5)]
+        self.data_dict['Mengeneinheit Bezeichnung:'] = original_data[find_nth(original_data, " ", 5)+1:]
+
+
     def split_up_combined_infos(self):
         # split up Produzent and Hauptlieferant
         self.split_up_produ_hauptl()
-
+        self.split_up_mengeneinheit()
+        
         # split up Mengeneinheit
         # split up Listenpreis/Grundpreis
         # split up Einkaufspreis X
         # split up Preis X
         # split up Lieferanten-Konditionen
+
+
+# help function to find nth occurence of substring
+def find_nth(input_string, substring, n):
+    start = input_string.find(substring)
+    while start >= 0 and n > 1:
+        start = input_string.find(substring, start+len(substring))
+        n -= 1
+    return start
+
 
 # function for reading in pdf as text
 def extract_text_by_page(pdf_path):

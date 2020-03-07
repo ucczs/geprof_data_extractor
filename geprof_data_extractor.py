@@ -56,19 +56,33 @@ g_data_types = [
     'GTIN Palette:',
     'Bemerkung:',
     'Listenpreis/Grundpreis:',
+    'output_only_Listenpreis/Grundpreis Fl:',
+    'output_only_Listenpreis/Grundpreis Kommentar:',
     'Einkaufspreis 1:',
+    'output_only_Einkaufspreis 1 Fl:',
     'Einkaufspreis 2:',
+    'output_only_Einkaufspreis 2 Fl:',
     'Einkaufspreis 3:',
-    'Kalkulation:',
+    'output_only_Einkaufspreis 3 Fl:',
+    'input_only_Kalkulation:',
     'Preis 1:',
+    'output_only_Preis 1 Fl:',
     'Preis 2:',
+    'output_only_Preis 2 Fl:',
     'Preis 3:',
+    'output_only_Preis 3 Fl:',
     'Preis 4:',
+    'output_only_Preis 4 Fl:',
     'Preis 5:',
+    'output_only_Preis 5 Fl:',
     'Preis 6:',
+    'output_only_Preis 6 Fl:',
     'Preis 7:',
+    'output_only_Preis 7 Fl:',
     'Preis 8:',
+    'output_only_Preis 8 Fl:',
     'Preis 9:',
+    'output_only_Preis 9 Fl:',
     'Abholvergütung:'
 ]
 
@@ -135,20 +149,34 @@ class CArticle:
             'GTIN Kiste / Faß:': '',
             'GTIN Palette:': '',
             'Bemerkung:': '',
-            'ListenpreisssGrundpreis:': '',
+            'Listenpreis/Grundpreis:': '',
+            'Listenpreis/Grundpreis Fl:': '',
+            'Listenpreis/Grundpreis Kommentar:': '',
             'Einkaufspreis 1:': '',
+            'Einkaufspreis 1 Fl:': '',
             'Einkaufspreis 2:': '',
+            'Einkaufspreis 2 Fl:': '',
             'Einkaufspreis 3:': '',
+            'Einkaufspreis 3 Fl:': '',
             'Kalkulation:': '',
             'Preis 1:': '',
+            'Preis 1 Fl:': '',
             'Preis 2:': '',
+            'Preis 2 Fl:': '',
             'Preis 3:': '',
+            'Preis 3 Fl:': '',
             'Preis 4:': '',
+            'Preis 4 Fl:': '',
             'Preis 5:': '',
+            'Preis 5 Fl:': '',
             'Preis 6:': '',
+            'Preis 6 Fl:': '',
             'Preis 7:': '',
+            'Preis 7 Fl:': '',
             'Preis 8:': '',
+            'Preis 8 Fl:': '',
             'Preis 9:': '',
+            'Preis 9 Fl:': '',
             'Abholvergütung:': ''
       }
   
@@ -255,16 +283,51 @@ class CArticle:
         self.data_dict['Mengeneinheit Lage:'] = original_data[find_nth(original_data, " ", 4)+1:find_nth(original_data, " ", 5)]
         self.data_dict['Mengeneinheit Bezeichnung:'] = original_data[find_nth(original_data, " ", 5)+1:]
 
+    
+    def split_up_einkaufspreis(self):
+        einkaufspreise_cnt = 3
+        for i in range(1, einkaufspreise_cnt + 1):
+            type_name_ek = 'Einkaufspreis ' + str(i) + ':'
+            type_name_ek_fl = 'Einkaufspreis ' + str(i) + ' Fl:'
+
+            original_data = self.data_dict[type_name_ek]
+            if original_data.find("Fl") >= 0:
+                self.data_dict[type_name_ek] = original_data[:original_data.find("Fl") - 1]
+                self.data_dict[type_name_ek_fl] = original_data[original_data.find("Fl") + 3:]
+            else:
+                continue
+
+
+    def split_up_preis(self):
+        preise_cnt = 9
+        for i in range(1, preise_cnt + 1): 
+            type_name_preis = 'Preis ' + str(i) + ':'
+            type_name_preis_fl = 'Preis ' + str(i) + ' Fl:'
+
+            original_data = self.data_dict[type_name_preis]
+            self.data_dict[type_name_preis] = original_data[original_data.find("Brutto") + 7:original_data.find("|")-1]
+            self.data_dict[type_name_preis_fl] = original_data[original_data.find("Fl") + 2:]
+
+
+    def split_up_listenpreis_grundpreis(self):
+        self.data_dict['Listenpreis/Grundpreis Kommentar:'] = self.data_dict['Kalkulation:']
+        
+        original_data = self.data_dict['Listenpreis/Grundpreis:']
+
+        if original_data.find("Fl") >= 0:
+            self.data_dict['Listenpreis/Grundpreis:'] = original_data[:original_data.find('Fl') - 1]
+            self.data_dict['Listenpreis/Grundpreis Fl:'] = original_data[original_data.find('Fl') + 3:original_data.find('=')]
+        else:
+            self.data_dict['Listenpreis/Grundpreis:'] = original_data[:original_data.find('=') - 1]
+
 
     def split_up_combined_infos(self):
-        # split up Produzent and Hauptlieferant
         self.split_up_produ_hauptl()
         self.split_up_mengeneinheit()
-        
-        # split up Mengeneinheit
-        # split up Listenpreis/Grundpreis
-        # split up Einkaufspreis X
-        # split up Preis X
+        self.split_up_einkaufspreis()
+        self.split_up_preis()
+        self.split_up_listenpreis_grundpreis()
+
         # split up Lieferanten-Konditionen
 
 
@@ -358,6 +421,9 @@ def generate_output_file():
 
     # create headings for output csv
     for data_type in g_data_types:
+        if data_type == "Inhalt:":
+            data_type = "Inhalt (Liter):"
+
         g_output_string += (data_type + ";")
 
     for i in range(1,51):
@@ -394,7 +460,7 @@ def generate_output_file():
 
 
 if __name__ == '__main__':
-    print(extract_text('.\\geprof_data.pdf'))
-    # print(extract_text('.\\all_articles.pdf'))
+    # print(extract_text('.\\geprof_data.pdf'))
+    print(extract_text('.\\all_articles.pdf'))
     # print_articles_list()
     generate_output_file()

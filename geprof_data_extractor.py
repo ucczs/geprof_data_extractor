@@ -97,6 +97,22 @@ g_remove_dict = {
     'Pfand:': 'EUR'
 }
 
+
+# class for lieferanten-konditionen
+class CLieferanten_kondi:
+    def __init__(self, raw_text):
+        self.raw_text = raw_text
+        self.data_dict_lieferanten_kondi = {
+            'Lieferanten-Konditionen Kondi-Gültigkeit': '',
+            'Lieferanten-Konditionen Kondi': '',
+            'Lieferanten-Konditionen Auf-/Abschlag': '',
+            'Lieferanten-Konditionen Wert': '',
+            'Lieferanten-Konditionen Einheit': '',
+            'Lieferanten-Konditionen Geltungsbereich': '',
+            'Lieferanten-Konditionen Bezeichnung': ''
+        }
+
+ 
 # class for articles
 class CArticle:
     def __init__(self, first_page, second_page):
@@ -105,7 +121,8 @@ class CArticle:
         self.second_page = second_page
 
         # dictionary to file with data found in the pdf
-        self.lieferaten_konditionen = []
+        self.lieferanten_konditionen_raw = []
+        self.lieferanten_konditionen_split_up = []
 
         self.data_dict = {
             'Artikel-Nummer:': '',
@@ -179,6 +196,8 @@ class CArticle:
             'Preis 9 Fl:': '',
             'Abholvergütung:': ''
       }
+
+
   
 
     # extract data from first page
@@ -255,9 +274,68 @@ class CArticle:
 
             for cnt, begin_idx in enumerate(list_of_lieferanten_konditionen_idx):
                 if cnt < len(list_of_lieferanten_konditionen_idx) - 1:
-                    self.lieferaten_konditionen.append(self.second_page[begin_idx:list_of_lieferanten_konditionen_idx[cnt + 1]])
+                    self.lieferanten_konditionen_raw.append(self.second_page[begin_idx:list_of_lieferanten_konditionen_idx[cnt + 1]])
                 else:
-                    self.lieferaten_konditionen.append(self.second_page[begin_idx:])
+                    self.lieferanten_konditionen_raw.append(self.second_page[begin_idx:])
+
+            self.split_up_lieferanten_kondi()
+
+
+    def split_up_lieferanten_kondi(self):
+        for lieferanten_kondition in self.lieferanten_konditionen_raw:
+            lieferanten_kondition.replace("   ", " ").replace("  ", " ")
+            newLieferantenKondi = CLieferanten_kondi(lieferanten_kondition)
+
+            # Lieferanten-Konditionen Kondi-Gültigkeit
+            kondi_string_before = ""
+            if lieferanten_kondition.find(". Ja") >= 0:
+                newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Kondi-Gültigkeit'] = 'Ja'
+                kondi_start_idx = lieferanten_kondition.find("Ja") + 2
+            elif lieferanten_kondition.find(". Nein") >= 0:
+                newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Kondi-Gültigkeit'] = 'Nein'
+                kondi_start_idx = lieferanten_kondition.find("Nein") + 4
+
+            # Lieferanten-Konditionen Auf-/Abschlag
+            if lieferanten_kondition.find("./.") >= 0:
+                kondi_end_idx = lieferanten_kondition.find("./.")
+                newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Auf-/Abschlag'] = './.'
+                wert_start_idx = lieferanten_kondition.find("./.") + 3
+
+            elif lieferanten_kondition.find("+") >= 0:
+                kondi_end_idx = lieferanten_kondition.find("+")
+                newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Auf-/Abschlag'] = '+'
+                wert_start_idx = lieferanten_kondition.find("+") + 1
+
+
+
+            # Lieferanten-Konditionen Kondi
+            newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Kondi'] = lieferanten_kondition[kondi_start_idx:kondi_end_idx].strip()
+
+            # Lieferanten-Konditionen Einheit
+            if lieferanten_kondition.find("%") >= 0:
+                einheit_end_idx = lieferanten_kondition.find("%") + 1
+                einheit_start_idx = lieferanten_kondition.find("%")
+                newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Einheit'] = "%"
+            elif lieferanten_kondition.find("EUR") >= 0:
+                einheit_start_idx = lieferanten_kondition.find("EUR")
+                einheit_end_idx = lieferanten_kondition[lieferanten_kondition.find("EUR") + 1:].find(" ") + lieferanten_kondition.find("EUR") + 1
+                einheit = lieferanten_kondition[einheit_start_idx:einheit_end_idx]
+                newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Einheit'] = einheit
+
+            # Lieferanten-Konditionen Wert
+            newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Wert'] = lieferanten_kondition[wert_start_idx:einheit_start_idx]
+
+            # Lieferanten-Konditionen Geltungsbereich
+            geltungsbereich_string = lieferanten_kondition[einheit_end_idx:].strip()
+            geltungsbereich_idx_end = geltungsbereich_string.find(" ")
+            newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Geltungsbereich'] = geltungsbereich_string[:geltungsbereich_idx_end].strip()
+
+            # Lieferanten-Konditionen Bezeichnung
+            newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Bezeichnung'] = geltungsbereich_string[geltungsbereich_idx_end + 1:].strip()
+
+            self.lieferanten_konditionen_split_up.append(newLieferantenKondi)
+
+
 
     # format of produzent and hauptlieferant:
     # 01234 Name
@@ -327,8 +405,6 @@ class CArticle:
         self.split_up_einkaufspreis()
         self.split_up_preis()
         self.split_up_listenpreis_grundpreis()
-
-        # split up Lieferanten-Konditionen
 
 
 # help function to find nth occurence of substring
@@ -423,18 +499,23 @@ def generate_output_file():
     for data_type in g_data_types:
         if data_type == "Inhalt:":
             data_type = "Inhalt (Liter):"
-
         g_output_string += (data_type + ";")
 
     for i in range(1,51):
-        g_output_string += (str(i) + ". Lieferanten-Konditionen;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Kondi-Gültigkeit;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Kondi;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Auf-/Abschlag;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Wert;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Einheit;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Geltungsbereich;")
+        g_output_string += (str(i) + ". Lieferanten-Konditionen Bezeichnung;")
 
     g_output_string += "\n"
     output_file_cnt = 0
 
     for article in g_article_list:
         
-        # debug output to see some progress
+        # output to see some progress 
         output_file_cnt += 1
         if output_file_cnt % 50 == 0:
             print("Article " + str(output_file_cnt) + " of " + str(len(g_article_list)) + " written to output string.")
@@ -446,10 +527,16 @@ def generate_output_file():
         g_output_string += (';'.join(data_types_list) + ";")
         
         # list, append and join is used for speed up (concatenation is very slow)
-        lieferaten_kondition_list = []
-        for lieferaten_kondition in article.lieferaten_konditionen:
-            lieferaten_kondition_list.append(lieferaten_kondition)
-        g_output_string += (';'.join(lieferaten_kondition_list) + ";")
+        # lieferanten_kondition_list = []
+        # for lieferaten_kondition in article.lieferanten_konditionen_raw:
+        #     lieferanten_kondition_list.append(lieferaten_kondition)
+        # g_output_string += (';'.join(lieferanten_kondition_list) + ";")
+
+        for lieferanten_kondition in article.lieferanten_konditionen_split_up:
+            lieferanten_kondition_list = []
+            for kondi_data in lieferanten_kondition.data_dict_lieferanten_kondi.keys():
+                lieferanten_kondition_list.append(lieferanten_kondition.data_dict_lieferanten_kondi[kondi_data])
+            g_output_string += (';'.join(lieferanten_kondition_list) + ";")
 
         g_output_string += "\n"
 

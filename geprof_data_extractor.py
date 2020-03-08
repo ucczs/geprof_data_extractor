@@ -86,7 +86,6 @@ g_data_types = [
     'Abholvergütung:'
 ]
 
-
 # define substrings which should be removed from a specific data type
 g_remove_dict = {
     'Größe:': 'Stück',
@@ -112,7 +111,7 @@ class CLieferanten_kondi:
             'Lieferanten-Konditionen Bezeichnung': ''
         }
 
- 
+
 # class for articles
 class CArticle:
     def __init__(self, first_page, second_page):
@@ -197,8 +196,6 @@ class CArticle:
             'Abholvergütung:': ''
       }
 
-
-  
 
     # extract data from first page
     def extract_data_from_first_page(self):
@@ -306,8 +303,6 @@ class CArticle:
                 newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Auf-/Abschlag'] = '+'
                 wert_start_idx = lieferanten_kondition.find("+") + 1
 
-
-
             # Lieferanten-Konditionen Kondi
             newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Kondi'] = lieferanten_kondition[kondi_start_idx:kondi_end_idx].strip()
 
@@ -334,7 +329,6 @@ class CArticle:
             newLieferantenKondi.data_dict_lieferanten_kondi['Lieferanten-Konditionen Bezeichnung'] = geltungsbereich_string[geltungsbereich_idx_end + 1:].strip()
 
             self.lieferanten_konditionen_split_up.append(newLieferantenKondi)
-
 
 
     # format of produzent and hauptlieferant:
@@ -499,6 +493,12 @@ def generate_output_file():
     for data_type in g_data_types:
         if data_type == "Inhalt:":
             data_type = "Inhalt (Liter):"
+        if data_type == "Gewicht:":
+            data_type = "Gewicht (kg):"
+        if data_type == "Pfand:":
+            data_type = "Pfand (€):"
+        if data_type == "MwSt-Satz:":
+            data_type = "MwSt-Satz: (%):"
         g_output_string += (data_type + ";")
 
     for i in range(1,51):
@@ -527,11 +527,6 @@ def generate_output_file():
         g_output_string += (';'.join(data_types_list) + ";")
         
         # list, append and join is used for speed up (concatenation is very slow)
-        # lieferanten_kondition_list = []
-        # for lieferaten_kondition in article.lieferanten_konditionen_raw:
-        #     lieferanten_kondition_list.append(lieferaten_kondition)
-        # g_output_string += (';'.join(lieferanten_kondition_list) + ";")
-
         for lieferanten_kondition in article.lieferanten_konditionen_split_up:
             lieferanten_kondition_list = []
             for kondi_data in lieferanten_kondition.data_dict_lieferanten_kondi.keys():
@@ -549,5 +544,4 @@ def generate_output_file():
 if __name__ == '__main__':
     # print(extract_text('.\\geprof_data.pdf'))
     print(extract_text('.\\all_articles.pdf'))
-    # print_articles_list()
     generate_output_file()

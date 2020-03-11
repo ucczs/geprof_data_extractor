@@ -498,7 +498,7 @@ def generate_output_file():
         if data_type == "Pfand:":
             data_type = "Pfand (€):"
         if data_type == "MwSt-Satz:":
-            data_type = "MwSt-Satz: (%):"
+            data_type = "MwSt-Satz (%):"
         g_output_string += (data_type + ";")
 
     for i in range(1,51):
@@ -542,6 +542,6 @@ def generate_output_file():
 
 
 if __name__ == '__main__':
-    # print(extract_text('.\\geprof_data.pdf'))
-    print(extract_text('.\\all_articles.pdf'))
+    print(extract_text('.\\geprof_data.pdf'))
+    # print(extract_text('.\\all_articles.pdf'))
     generate_output_file()

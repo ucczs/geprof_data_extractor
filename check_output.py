@@ -9,14 +9,14 @@ g_numbers_only_data = [
     'Artikel-Nummer:',
     'Größe:',
     'Inhalt (Liter):',
-    'Gewicht:',
+    'Gewicht (kg):',
     'Mengeneinheit Nr:',
     'Mengeneinheit Pal:',
     'Mengeneinheit Lage:',
     'Produzent-Nr:',
     'Leergut-Nummer:',
-    'Pfand:',
-    'MwSt-Satz:',
+    'Pfand (€):',
+    'MwSt-Satz (%):',
     'Preislisten-Nummer:',
     'Meldebestand:',
     'Höchstbestand:',
@@ -34,6 +34,8 @@ g_numbers_only_data = [
 
 
 g_defined_data_type_only = [
+    'MwSt-Satz (%):',
+    'Pfand (€):',
     'Rückvergütung:',
     'Rabattartikel:',
     'Preisliste:',

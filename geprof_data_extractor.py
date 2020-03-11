@@ -542,6 +542,6 @@ def generate_output_file():
 
 
 if __name__ == '__main__':
-    print(extract_text('.\\geprof_data.pdf'))
-    # print(extract_text('.\\all_articles.pdf'))
+    # print(extract_text('.\\geprof_data.pdf'))
+    print(extract_text('.\\all_articles.pdf'))
     generate_output_file()
